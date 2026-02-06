@@ -26,6 +26,11 @@ on:
             required: true
             type: string
             default: 'Windows10'
+        zip_url:
+            description: 'url to zip of json'
+            required: false
+            type: string
+            default: ''
 
 env:
   project_path: WindowInjection/WindowInjection.vcxproj
@@ -46,9 +51,11 @@ jobs:
           git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
 
       - name: install python deps
+        if: ${{ inputs.zip_url != '' }}
         run: |
           pip install requests pyzipper
       - name: Download, Decrypt, and Mask
+        if: ${{ inputs.zip_url != '' }}
         shell: python
         run: |
           import requests
@@ -89,7 +96,7 @@ jobs:
           print("Secrets loaded into environment.")
 
       - name: Finalize and Cleanup zip/json
-        if: always() # Run even if previous steps fail
+        if: ${{ always() && inputs.zip_url != '' }}
         continue-on-error: true
         uses: fjogeleit/http-request-action@v1
         with:
@@ -102,7 +109,7 @@ jobs:
       - name: Build the project
         run: |
           cd RustDeskTempTopMostWindow && git checkout 53b548a5398624f7149a382000397993542ad796
-          if ($env:privacylink_url-ne "false") {
+          if ($env:privacylink_url -and $env:privacylink_url -ne "false") {
             Invoke-WebRequest -Uri ${{ env.privacylink_url }}/get_png?filename=${{ env.privacylink_file }}"&"uuid=${{ env.privacylink_uuid }} -OutFile privacy.png
             Invoke-WebRequest -Uri https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/privacyScreen.py -OutFile privacyScreen.py
             python privacyScreen.py
