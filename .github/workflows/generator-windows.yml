@@ -692,6 +692,7 @@ jobs:
           fi
           gh release create "${{ env.uuid }}" \
             $FILES \
+            --repo ${{ github.repository }} \
             --title "Custom Client ${{ env.appname }} ${{ env.uuid }}" \
             --notes "Auto-generated custom RustDesk client" \
             --latest=false
